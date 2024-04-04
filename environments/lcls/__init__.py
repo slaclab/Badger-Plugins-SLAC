@@ -352,10 +352,29 @@ class Environment(environment.Environment):
             'QUAD:IN20:121:BCTRL',
             'QUAD:IN20:122:BCTRL',
         ]
+        extra_pvs = [
+            'CAMR:IN20:186:XRMS',
+            'CAMR:IN20:186:YRMS',
+            'BLEN:LI21:265:AIMAX1H',
+            'BLEN:LI24:886:BIMAX1H',
+            'SIOC:SYS0:ML00:CALC038',
+            'SIOC:SYS0:ML00:CALC252',
+            'BEND:DMPH:400:BACT',
+            'SIOC:SYS0:ML00:AO627',
+            'ACCL:LI21:1:L1S_S_AV',
+            'ACCL:LI21:1:L1S_S_PV',
+            'ACCL:LI21:180:L1X_S_AV',
+            'ACCL:LI21:180:L1X_S_PV',
+            'ACCL:LI22:1:ADES',
+            'ACCL:LI22:1:PDES',
+            'ACCL:LI25:1:ADES',
+            'ACCL:LI25:1:PDES',
+        ]
 
         try:
             states_general = self.interface.get_values(general_pvs)
             states_quads = self.interface.get_values(matching_quads)
+            states_extra = self.interface.get_values(extra_pvs)
 
             system_states = {
                 'HXR electron energy [GeV]': states_general['BEND:DMPH:400:BDES'],
@@ -369,6 +388,7 @@ class Environment(environment.Environment):
                 'Charge at SXR dump [pC]': ignore_small_value(states_general['BPMS:DMPS:693:TMITCUS1H'] * 1.602e-7),
             }
             system_states.update(states_quads)
+            system_states.update(states_extra)
         except Exception as e:
             logging.warn(
                 'Failed to get system states, will not save the requested system states.')
