@@ -262,15 +262,15 @@ class Environment(environment.Environment):
                 bs_y = self.interface.get_value(f'OTRS:IN20:{mid}:YRMS')
                 value = np.sqrt(bs_x * bs_y)
             elif obs == 'beam_loss':
-                return loss_p80
+                value = loss_p80
             elif obs == 'pulse_intensity_p80':
-                return intensity_p80
+                value = intensity_p80
             elif obs == 'pulse_intensity_mean':
-                return intensity_mean
+                value = intensity_mean
             elif obs == 'pulse_intensity_median':
-                return intensity_median
+                value = intensity_median
             elif obs == 'pulse_intensity_std':
-                return intensity_std
+                value = intensity_std
             elif obs == 'pulse_id':
                 value = self.interface.get_value('PATT:SYS0:1:PULSEID')
             else:  # won't happen actually
