@@ -1,0 +1,8 @@
+---
+name: facet-ii
+version: "0.1"
+dependencies:
+  - numpy
+  - badger-opt
+interface:
+  - epics
