@@ -109,14 +109,6 @@ class Extension(extension.Extension):
         else:
             configs['xopt'] = {'strict': True}
 
-        xopt_version = version.parse(__version__)
-        flag_v2 = (xopt_version >= version.parse('2.0')) or xopt_version.is_prerelease
-
-        if flag_v2:
-            configs['strict'] = True
-        else:
-            configs['xopt'] = {'strict': True}
-
         # Set up logging
         configure_logger(level="ERROR")
 
