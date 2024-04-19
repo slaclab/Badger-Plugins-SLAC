@@ -7,7 +7,7 @@ from badger import environment
 
 
 class Environment(environment.Environment):
-    name = "facet-ii"
+    name = "facet_ii"
     variables = {
         "SIOC:SYS1:ML00:AO551": [-1.0, 1.7],  # - X sextupole 2145
         "SIOC:SYS1:ML00:AO556": [-0.4, 1.8],  # - Y sextupole 2145
