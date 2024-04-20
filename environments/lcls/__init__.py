@@ -76,6 +76,7 @@ class Environment(environment.Environment):
     ]
 
     # Env params
+    readonly: bool = False  # set to True if do not want to change the machine state
     points: int = 120
     hxr: bool = True  # if HXR is used
 
@@ -123,6 +124,9 @@ class Environment(environment.Environment):
 
     def set_variables(self, variable_inputs: Dict[str, float]):
         assert self.interface, 'Must provide an interface!'
+
+        if self.readonly:
+            return
 
         self.interface.set_values(variable_inputs)
 
