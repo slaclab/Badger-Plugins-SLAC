@@ -45,6 +45,12 @@ class Interface(interface.Interface):
             flag = True
             while count_down > 0:
                 value = pv.get(as_string=as_string)
+
+                if type(value) is str:
+                    channel_outputs[channel] = value
+                    flag = False
+                    break
+
                 try:
                     _ = len(value)
                     value = value[~np.isnan(value)]
