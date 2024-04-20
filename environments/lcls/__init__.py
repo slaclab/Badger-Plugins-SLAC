@@ -50,6 +50,12 @@ class Environment(environment.Environment):
         'DMD:IN20:1:DELAY_2': [],
         'DMD:IN20:1:WIDTH_2': [],
         'SIOC:SYS0:ML03:AO956': [],
+        'ACCL:LI21:180:L1X_ADES': [17.85, 19.0],
+        'ACCL:LI21:180:L1X_PDES': [-197.15, -140],
+        'ACCL:LI21:1:L1S_ADES': [100.11, 150.0],
+        'ACCL:LI21:1:L1S_PDES': [-33.0, 15.0],
+        'ACCL:LI22:1:ADES': [500.0, 7000.0],
+        'ACCL:LI22:1:PDES': [-38.91, -1.5],
     }
     observables = [
         'energy',
@@ -64,6 +70,7 @@ class Environment(environment.Environment):
         'pulse_intensity_mean',
         'pulse_intensity_median',
         'pulse_intensity_std',
+        'pulse_intensity_std_relative',
         'beam_loss',
         'pulse_id'
     ]
@@ -79,6 +86,8 @@ class Environment(environment.Environment):
     use_check_var: bool = True  # if check var reaches the target value
     trim_delay: float = 3.0  # in second
     fault_timeout: float = 5.0  # in second
+
+    epsilon: float = 1e-8  # avoid divided by zero in relative FEL jitter
 
     def get_bounds(self, variable_names):
         assert self.interface, 'Must provide an interface!'
@@ -271,6 +280,8 @@ class Environment(environment.Environment):
                 value = intensity_median
             elif obs == 'pulse_intensity_std':
                 value = intensity_std
+            elif obs == 'pulse_intensity_std_relative':
+                value = intensity_std / (intensity_mean + self.epsilon)
             elif obs == 'pulse_id':
                 value = self.interface.get_value('PATT:SYS0:1:PULSEID')
             else:  # won't happen actually
