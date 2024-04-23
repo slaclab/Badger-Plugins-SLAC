@@ -1,5 +1,4 @@
-import torch
-from typing import Dict
+import numpy as np
 from badger import environment
 
 
@@ -19,14 +18,14 @@ class Environment(environment.Environment):
 
         return variable_outputs
 
-    def set_variables(self, variable_inputs: Dict[str, float]):
+    def set_variables(self, variable_inputs: dict[str, float]):
         for var, x in variable_inputs.items():
             self._variables[var] = x
 
         # Filling up the observations
-        x = torch.tensor([self._variables[f'x{i}'] for i in range(20)])
+        x = np.array([self._variables[f'x{i}'] for i in range(20)])
 
-        self._observations['f'] = (x ** 2).sum().numpy()
+        self._observations['f'] = (x ** 2).sum()
 
     def get_observables(self, observable_names):
         return {k: self._observations[k] for k in observable_names}

@@ -66,15 +66,14 @@ class Extension(extension.Extension):
         from operator import itemgetter
 
         from badger.utils import config_list_to_dict
-
+        from xopt import __version__
         from xopt import Xopt
         from xopt.log import configure_logger
         from .utils import convert_evaluate, get_init_data
 
         routine_configs, algo_configs = itemgetter(
-            "routine_configs", "algo_configs"
-        )(configs)
-        params_algo = algo_configs["params"].copy()
+            'routine_configs', 'algo_configs')(configs)
+        params_algo = copy.deepcopy(algo_configs['params'])
         try:
             start_from_current = params_algo["start_from_current"]
             del params_algo["start_from_current"]
@@ -82,11 +81,8 @@ class Extension(extension.Extension):
             start_from_current = True
 
         config = {
-            "xopt": {
-                "strict": True,
-            },
-            "generator": {
-                "name": algo_configs["name"],
+            'generator': {
+                'name': algo_configs['name'],
                 **params_algo,
             },
             "evaluator": {

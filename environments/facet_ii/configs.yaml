@@ -1,8 +1,8 @@
 ---
-name: lcls
+name: facet_ii
 version: "0.1"
 dependencies:
   - numpy
   - badger-opt
 interface:
-  - epics_raw
+  - epics
