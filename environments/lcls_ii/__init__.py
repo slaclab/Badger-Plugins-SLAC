@@ -10,6 +10,10 @@ class Environment(environment.Environment):
 
     name = 'lcls_ii'
     variables = {
+        'QUAD:COL0:240:BCTRL': [],
+        'QUAD:COL0:260:BCTRL': [],
+        'QUAD:COL0:280:BCTRL': [],
+        'QUAD:COL0:320:BCTRL': [],
         'QUAD:COL1:120:BCTRL': [],
         'QUAD:COL1:260:BCTRL': [],
         'QUAD:COL1:280:BCTRL': [],
@@ -21,6 +25,7 @@ class Environment(environment.Environment):
         'QUAD:DOG:250:BCTRL': [],
         'QUAD:DOG:280:BCTRL': [],
         'QUAD:DOG:335:BCTRL': [],
+        'QUAD:DOG:355:BCTRL': [],
         'QUAD:DOG:405:BCTRL': [],
         'QUAD:LTUS:620:BCTRL': [],
         'QUAD:LTUS:640:BCTRL': [],
