@@ -2,7 +2,11 @@ import logging
 import time
 import numpy as np
 from badger import environment
-from badger.errors import BadgerNoInterfaceError, BadgerEnvObsError
+from badger.errors import (
+    BadgerNoInterfaceError,
+    BadgerEnvObsError,
+    BadgerInterfaceChannelError
+)
 from .utils import get_buffer_stats
 
 
@@ -93,7 +97,15 @@ class Environment(environment.Environment):
             else:
                 readback = v
             channel_names.append(readback)
+
+        # Fetch the interface until all values are not None
+        time_start = time.time()
         channel_outputs = self.interface.get_values(channel_names)
+        while None in channel_outputs.values():
+            time.sleep(0.1 * np.random.rand())
+            time_elapsed = time.time() - time_start
+            if time_elapsed > self.check_var_timeout:
+                raise BadgerInterfaceChannelError
 
         variable_outputs = {v: channel_outputs[channel_names[i]]
                             for i, v in enumerate(variable_names)}

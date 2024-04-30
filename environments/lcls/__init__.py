@@ -3,7 +3,7 @@ import numpy as np
 from typing import Dict, List
 from badger import environment
 from badger.stats import percent_80
-from badger.errors import BadgerEnvObsError
+from badger.errors import BadgerEnvObsError, BadgerInterfaceChannelError
 import logging
 
 
@@ -85,8 +85,9 @@ class Environment(environment.Environment):
     loss_pv: str = 'LBLM:COL0:862:A:I0_LOSSHSTSCS'  # PV name for loss monitor
 
     use_check_var: bool = True  # if check var reaches the target value
+    check_var_timeout: float = 3.0  # tumeout for the var check
     trim_delay: float = 3.0  # in second
-    fault_timeout: float = 5.0  # in second
+    check_fault_timeout: float = 5.0  # in second
 
     epsilon: float = 1e-8  # avoid divided by zero in relative FEL jitter
 
@@ -115,7 +116,17 @@ class Environment(environment.Environment):
             else:
                 readback = v
             channel_names.append(readback)
+
+        # Fetch the interface until all values are not None
+        time_start = time.time()
         channel_outputs = self.interface.get_values(channel_names)
+        while None in channel_outputs.values():
+            time.sleep(0.1 * np.random.rand())
+            time_elapsed = time.time() - time_start
+            if time_elapsed > self.check_var_timeout:
+                raise BadgerInterfaceChannelError
+
+            channel_outputs = self.interface.get_values(channel_names)
 
         variable_outputs = {v: channel_outputs[channel_names[i]]
                             for i, v in enumerate(variable_names)}
@@ -141,7 +152,6 @@ class Environment(environment.Environment):
                                 if v.endswith(':BCTRL')]
         variable_status = self.interface.get_values(variable_ready_flags)
 
-        timeout = 3  # second
         time_start = time.time()
         while np.any(np.array(variable_status.values())):
             time.sleep(0.1 * np.random.rand())
@@ -149,7 +159,7 @@ class Environment(environment.Environment):
             variable_status = self.interface.get_values(variable_ready_flags)
 
             time_elapsed = time.time() - time_start
-            if time_elapsed > timeout:
+            if time_elapsed > self.check_var_timeout:
                 break
 
     def get_intensity_n_loss(self):
@@ -310,10 +320,10 @@ class Environment(environment.Environment):
             else:
                 ts_curr = time.time()
                 dt = ts_curr - ts_start
-                if dt > self.fault_timeout:
+                if dt > self.check_fault_timeout:
                     raise BadgerEnvObsError
 
-                time.sleep(0.1)
+                time.sleep(0.1 * np.random.rand())
 
     def get_system_states(self):
         assert self.interface, 'Must provide an interface!'
