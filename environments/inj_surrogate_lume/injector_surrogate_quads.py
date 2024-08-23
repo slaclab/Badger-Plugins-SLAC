@@ -25,13 +25,14 @@ class SurrogateNN:
         self.output_pv_to_sim = torch.load(os.path.join(_env_root, 'model/output_pv_to_sim.pt'))
 
         # load in- and output variable specification
-        self.input_variables, self.output_variables = variables_from_yaml(os.path.join(_env_root, "model/pv_variables.yml"))
+        self.input_variables, self.output_variables = variables_from_yaml(
+            os.path.join(_env_root, "model/pv_variables.yml")
+        )
 
         # lume model
         self.model = os.path.join(_env_root, "model/model.pt")
         # pv lume model from yaml
         self.pv_model = os.path.join(_env_root, "model/pv_model.yml")
-
 
         try:
             # simply load from YAML file
@@ -82,9 +83,9 @@ class SurrogateNN:
         return predictions
 
     # functions to convert between sim and machine units for data
-    def sim_to_pv(self, sim_vals):
-        return self.output_pv_to_sim.untransform(sim_vals)
-
-    def pv_to_sim(self, pv_vals):
-        pv_vals = torch.as_tensor(np.array([pv_vals]))
-        return self.input_pv_to_sim.transform(pv_vals)
+    # def sim_to_pv(self, sim_vals):
+    #     return self.output_pv_to_sim.untransform(sim_vals)
+    #
+    # def pv_to_sim(self, pv_vals):
+    #     pv_vals = torch.as_tensor(np.array([pv_vals]))
+    #     return self.input_pv_to_sim.transform(pv_vals)

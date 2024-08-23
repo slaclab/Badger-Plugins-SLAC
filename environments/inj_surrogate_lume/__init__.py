@@ -1,5 +1,7 @@
 from typing import Dict
 import time
+import torch
+import numpy as np
 from badger import environment
 
 
@@ -17,11 +19,11 @@ class Environment(environment.Environment):
         'ACCL:IN20:300:L0A_PDES': [-25.00, 10.00],
         'ACCL:IN20:400:L0B_ADES': [70.00, 70.00],
         'ACCL:IN20:400:L0B_PDES': [-25.00, 10.00],
-        # 'QUAD:IN20:361:BACT': [-4.00, -1.00],
-        # 'QUAD:IN20:371:BACT':  [1.00, 4.30],
-        # 'QUAD:IN20:425:BACT': [-7.55, -1.00],
-        # 'QUAD:IN20:441:BACT': [-1.00, 7.55],
-        # 'QUAD:IN20:511:BACT': [-1.00, 7.55],
+        'QUAD:IN20:361:BACT': [-4.00, -1.00],
+        'QUAD:IN20:371:BACT':  [1.00, 4.30],
+        'QUAD:IN20:425:BACT': [-7.55, -1.00],
+        'QUAD:IN20:441:BACT': [-1.00, 7.55],
+        # 'QUAD:IN20:511:BACT': [-1.00, 7.55],  # make these only available through interface
         # 'QUAD:IN20:525:BACT': [-7.55, -1.00],
     }
     observables = [
@@ -92,15 +94,10 @@ class Environment(environment.Environment):
 
         # Set solenoid, SQ, CQ to values from optimization step
         x_in = list(self._variables.values())
-
-        # Convert to sim units
-        x_in = self._model.pv_to_sim(x_in)
+        x_in = torch.as_tensor(np.array([x_in]))
 
         # Update predictions
         y_out = model.pred_sim_units(x_in)
-
-        # Convert back to machine units
-        y_out = self._model.sim_to_pv(y_out)
 
         self._observations['OTRS:IN20:571:XRMS'] = y_out[0].detach().item()
         self._observations['OTRS:IN20:571:YRMS'] = y_out[1].detach().item()
