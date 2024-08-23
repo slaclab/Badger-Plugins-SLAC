@@ -30,3 +30,6 @@ class Environment(environment.Environment):
             variable_outputs = self.interface.get_values(variable_names)
 
         return variable_outputs
+
+    def get_bounds(self, variable_names: list[str]) -> dict:
+        return {name: [-2, 2] for name in variable_names}
