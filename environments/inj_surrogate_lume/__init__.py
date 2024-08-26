@@ -3,6 +3,7 @@ import time
 import torch
 import numpy as np
 from badger import environment
+from badger.errors import BadgerInterfaceChannelError
 
 
 class Environment(environment.Environment):
@@ -64,7 +65,10 @@ class Environment(environment.Environment):
     waiting_time: float = 0
 
     def get_variables(self, variable_names):
-        variable_outputs = {v: self._variables[v] for v in variable_names}
+        try:
+            variable_outputs = {v: self._variables[v] for v in variable_names}
+        except KeyError:
+            raise BadgerInterfaceChannelError
 
         return variable_outputs
 

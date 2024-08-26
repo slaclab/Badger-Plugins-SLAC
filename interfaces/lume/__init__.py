@@ -1,5 +1,6 @@
 from badger import interface
 from typing import Dict
+from badger.errors import BadgerInterfaceChannelError
 
 
 class Interface(interface.Interface):
@@ -48,12 +49,15 @@ class Interface(interface.Interface):
             try:
                 value = self._states[channel]
             except KeyError:
-                if channel.endswith(".UB"):
-                    _channel = channel.split(".")[0]
-                    value = self._bounds[_channel][1]
-                elif channel.endswith(".LB"):
-                    _channel = channel.split(".")[0]
-                    value = self._bounds[_channel][0]
+                try:
+                    if channel.endswith(".UB"):
+                        _channel = channel.split(".")[0]
+                        value = self._bounds[_channel][1]
+                    elif channel.endswith(".LB"):
+                        _channel = channel.split(".")[0]
+                        value = self._bounds[_channel][0]
+                except KeyError:
+                    raise BadgerInterfaceChannelError
 
             channel_outputs[channel] = value
 
