@@ -3,6 +3,7 @@ import time
 import torch
 import numpy as np
 from badger import environment
+from badger.errors import BadgerInterfaceChannelError
 
 
 class Environment(environment.Environment):
@@ -11,13 +12,13 @@ class Environment(environment.Environment):
     variables = {
         'CAMR:IN20:186:R_DIST': [210.00, 500.00],
         'Pulse_length': [1.81, 7.27],
-        'FBCK:BCI0:1:CHRG_S': [0.25, 0.25],
+        'FBCK:BCI0:1:CHRG_S': [0.249, 0.2501],
         'SOLN:IN20:121:BACT': [0.37, 0.50],
         'QUAD:IN20:121:BACT': [-0.02, 0.02],
         'QUAD:IN20:122:BACT': [-0.02, 0.02],
-        'ACCL:IN20:300:L0A_ADES': [58.00, 58.00],
+        'ACCL:IN20:300:L0A_ADES': [57.99, 58.01],
         'ACCL:IN20:300:L0A_PDES': [-25.00, 10.00],
-        'ACCL:IN20:400:L0B_ADES': [70.00, 70.00],
+        'ACCL:IN20:400:L0B_ADES': [69.99, 70.01],
         'ACCL:IN20:400:L0B_PDES': [-25.00, 10.00],
         'QUAD:IN20:361:BACT': [-4.00, -1.00],
         'QUAD:IN20:371:BACT':  [1.00, 4.30],
@@ -64,7 +65,10 @@ class Environment(environment.Environment):
     waiting_time: float = 0
 
     def get_variables(self, variable_names):
-        variable_outputs = {v: self._variables[v] for v in variable_names}
+        try:
+            variable_outputs = {v: self._variables[v] for v in variable_names}
+        except KeyError:
+            raise BadgerInterfaceChannelError
 
         return variable_outputs
 
