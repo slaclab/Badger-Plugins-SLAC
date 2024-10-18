@@ -20,7 +20,7 @@ class Environment(environment.Environment):
         'QUAD:COL0:320:BCTRL': [],
         'QUAD:COL1:120:BCTRL': [],
         'QUAD:COL1:260:BCTRL': [],
-        'QUAD:COL1:280:BCTRL': [],
+        'QUAD:COL1:280:BCTRL': [],  # this one is often offline
         'QUAD:COL1:320:BCTRL': [],
         'QUAD:EMIT2:150:BCTRL': [],
         'QUAD:EMIT2:300:BCTRL': [],
@@ -36,6 +36,10 @@ class Environment(environment.Environment):
         'QUAD:LTUS:660:BCTRL': [],
         'QUAD:LTUS:680:BCTRL': [],
         'QUAD:HTR:120:BCTRL': [],
+        'QUAD:BC1B:250:BCTRL': [],
+        'QUAD:BC1B:750:BCTRL': [],
+        'QUAD:BC2B:250:BCTRL': [],
+        'QUAD:BC2B:850:BCTRL': [],
     }
     observables = [
         'sxr_pulse_intensity_p80',
@@ -148,13 +152,24 @@ class Environment(environment.Environment):
         # 1: BSA buffer
         # 2: manually data collection
         if self.method == 0:
+            req_rate = self.interface.get_value('TPG:SYS0:1:DST04:REQRATE')
+
+            if not req_rate:
+                raise BadgerEnvObsError
+
+            req_rate = float(req_rate)
+            if req_rate < 100:
+                rate_suffix = 'TH'  # 10 Hz
+            else:
+                rate_suffix = 'HH'  # 100 Hz
+
             if self.xgmd:
                 if self.avg:
                     intensity = self.interface.get_value(
                         'EM2K0:XGMD:HPS:AvgPulseIntensity')
                 else:
                     intensity = self.interface.get_value(
-                        'EM2K0:XGMD:HPS:milliJoulesPerPulse')
+                        f'EM2K0:XGMD:HPS:milliJoulesPerPulseSCS{rate_suffix}')
             else:
                 if self.avg:
                     intensity = self.interface.get_value(
@@ -165,7 +180,7 @@ class Environment(environment.Environment):
 
             loss = self.interface.get_value(self.loss_pv)
 
-            return intensity, intensity, intensity, 0, loss
+            return intensity, intensity, intensity, 0.0, loss
         elif self.method == 1:
             points = self.points
             logging.info(f'Get value of {points} points')
@@ -228,17 +243,23 @@ class Environment(environment.Environment):
         else:
             MPS_PV = 'SIOC:SYS0:MP00:SC_BSYD_BC'
 
+        NC_lion_PV = 'LION:LTU0:716:VACT'
+        NC_lion_threshold = 0.5
+
         ts_start = time.time()
         while True:
             # req_rate = self.interface.get_value('TPG:SYS0:1:DST04:REQRATE')
             # act_rate = self.interface.get_value('TPG:SYS0:1:DST04:RATE')
             # is_rate_matched = (req_rate == act_rate)
 
+            is_NC_OK = self.interface.get_value(NC_lion_PV) < NC_lion_threshold
+
             permit_MPS = self.interface.get_value(
                 MPS_PV, as_string=True)
             is_beam_on = (permit_MPS != 'Beam Off')
 
             # if is_rate_matched and is_beam_on:
+            # if is_NC_OK and is_beam_on:
             if is_beam_on:
                 break
             else:
