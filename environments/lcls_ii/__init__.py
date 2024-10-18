@@ -256,7 +256,7 @@ class Environment(environment.Environment):
             loss_raw = results_dict[PV_loss][-points:]
             ind_valid = ~np.logical_or(np.isnan(intensity_raw), np.isnan(loss_raw))
             intensity_valid = intensity_raw[ind_valid]
-            loss_valid = intensity_raw[ind_valid]
+            loss_valid = loss_raw[ind_valid]
 
             n_valid = len(intensity_valid)
             if not n_valid:
