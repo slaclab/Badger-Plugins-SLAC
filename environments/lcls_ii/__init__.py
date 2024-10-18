@@ -65,11 +65,13 @@ class Environment(environment.Environment):
     points: int = 100
     stats: str = 'percent_80'
     # Var setters
-    use_check_var: bool = False  # if check var reaches the target value
+    use_check_var: bool = True  # if check var reaches the target value
     check_var_timeout: float = 3.0  # tumeout for the var check
     trim_delay: float = 7.0  # in second
     # MPS fault check
+    use_check_fault: bool = True  # if check fault status
     check_fault_timeout: float = 5.0  # in second
+    # Other
     lasering: bool = True  # if it's lasering
 
     def get_bounds(self, variable_names):
@@ -83,6 +85,10 @@ class Environment(environment.Environment):
 
         bound_outputs = {}
         for i, v in enumerate(variable_names):
+            if bounds_low[pvs_low[i]] is None or bounds_high[pvs_high[i]] is None:
+                bounds_low[pvs_low[i]] = -1000
+                bounds_high[pvs_high[i]] = 1000
+
             bound_outputs[v] = [
                 bounds_low[pvs_low[i]],
                 bounds_high[pvs_high[i]]]
@@ -111,8 +117,11 @@ class Environment(environment.Environment):
             if time_elapsed > self.check_var_timeout:
                 raise BadgerInterfaceChannelError
 
-        variable_outputs = {v: channel_outputs[channel_names[i]]
-                            for i, v in enumerate(variable_names)}
+            channel_outputs = self.interface.get_values(channel_names)
+
+        variable_outputs = {
+            v: channel_outputs[channel_names[i]] for i, v in enumerate(variable_names)
+        }
 
         return variable_outputs
 
@@ -121,6 +130,12 @@ class Environment(environment.Environment):
             raise BadgerNoInterfaceError
 
         self.interface.set_values(variable_inputs)
+        self.check_variables(variable_inputs)
+
+    def check_variables(self, variable_inputs):
+        # If use_check_var is False, we simply sleep for trim_delay seconds
+        # else, we check if the variables have reached the target values, then
+        # sleep for trim_delay seconds
 
         if not self.use_check_var:
             if self.trim_delay:
@@ -128,20 +143,45 @@ class Environment(environment.Environment):
 
             return
 
-        variable_ready_flags = [v[:v.rfind(':')] + ':STATCTRLSUB.T'
-                                for v in variable_inputs
-                                if v.endswith(':BCTRL')]
-        variable_status = self.interface.get_values(variable_ready_flags)
+        # For those STATCTRLSUB.T flag, 0 means settled, 1 means changing
+        variable_ready_flags = [
+            v[: v.rfind(":")] + ":STATCTRLSUB.T"
+            for v in variable_inputs
+            if v.endswith(":BCTRL")
+        ]
 
         time_start = time.time()
-        while np.any(np.array(variable_status.values())):
+
+        # Wait for magnets to start changing
+        # Since there is a delay in the flag PV response,
+        # we wait for max 3 seconds
+        variable_status = self.interface.get_values(variable_ready_flags)
+
+        while not np.any(np.array(list(variable_status.values()))):
+            time.sleep(0.1 * np.random.rand())
+
+            variable_status = self.interface.get_values(variable_ready_flags)
+
+            time_elapsed = time.time() - time_start
+            if time_elapsed > self.check_var_timeout:  # or 3s?
+                break
+        # Here is a lite and rough version of the above code
+        # time.sleep(3.0)
+        # TODO: add debug message to show how long it takes to start changing
+
+        # Wait for magnets to settle
+        variable_status = self.interface.get_values(variable_ready_flags)
+
+        while np.any(np.array(list(variable_status.values()))):
             time.sleep(0.1 * np.random.rand())
 
             variable_status = self.interface.get_values(variable_ready_flags)
 
             time_elapsed = time.time() - time_start
             if time_elapsed > self.check_var_timeout:
+                # raise RuntimeWarning("check var timeout exceeded")
                 break
+        # TODO: add debug message to show how long it takes to settle
 
         if self.trim_delay:
             time.sleep(self.trim_delay)  # extra time for stablizing orbits
@@ -282,7 +322,8 @@ class Environment(environment.Environment):
             raise BadgerNoInterfaceError
 
         # Make sure machine is not in a fault state
-        self.check_fault_status()
+        if self.use_check_fault:
+            self.check_fault_status()
 
         if self.is_sxr_pulse_intensity_observed(observable_names) or \
            self.is_beam_loss_observed(observable_names):
