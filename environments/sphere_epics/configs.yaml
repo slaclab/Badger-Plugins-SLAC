@@ -1,9 +1,0 @@
----
-name: sphere
-description: "2D sphere w/ epics test environment"
-version: "0.1"
-dependencies:
-  - numpy
-  - badger-opt
-interface:
-  - epics_raw
